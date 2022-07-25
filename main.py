@@ -217,7 +217,7 @@ def generate_maze(graph, points_arr, edges_arr, ai_points_arr, ai_edges_arr, hei
     return [i for i in ai_points_arr if i not in array_remove_points]'''
 
     # This algorithm is a randomized version of Prim's algorithm.
-    #
+    #+
     # Start with a grid full of walls.
     # Pick a cell, mark it as part of the maze. Add the walls of the cell to the wall list.
         # While there are walls in the list:
@@ -248,7 +248,7 @@ def generate_maze(graph, points_arr, edges_arr, ai_points_arr, ai_edges_arr, hei
         if edges_points_list[edge[0]][0] == edges_points_list[edge[1]][0]:
 
             edge_direction = "vertical"
-            reference_point = edges_points_list[edge[0]] if edges_points_list[edge[0]][1] > edges_points_list[edge[1]][1] else edges_points_list[edge[1]]  # top-most point
+            reference_point = edges_points_list[edge[0]] if edges_points_list[edge[0]][1] < edges_points_list[edge[1]][1] else edges_points_list[edge[1]]  # top-most point
             cell_point1 = (reference_point[0] + width_offset,
                            reference_point[1] + height_offset)  # right side point of vertical dividing edge
             cell_point2 = (reference_point[0] - width_offset,
@@ -347,6 +347,8 @@ def generate_maze(graph, points_arr, edges_arr, ai_points_arr, ai_edges_arr, hei
                                     wall_storage.append(bottom_wall)
                                 else:
                                     bottom_wall = ()
+
+        walls = [i for i in wall_storage if i not in excluded_walls]
         '''print(top_right_corner)
         print(top_left_corner)
         print(bottom_right_corner)
@@ -354,8 +356,9 @@ def generate_maze(graph, points_arr, edges_arr, ai_points_arr, ai_edges_arr, hei
         print(top_wall)
         print(bottom_wall)
         print(left_wall)
-        print(right_wall)'''
-        walls = [i for i in wall_storage if i not in excluded_walls]
+        print(right_wall)
+        print(walls)
+        print(excluded_walls)'''
         return walls
     ram_walls = find_walls_from_cell(ai_start_choice, [])
     print("starting walls = " + str(ram_walls))
@@ -374,17 +377,20 @@ def generate_maze(graph, points_arr, edges_arr, ai_points_arr, ai_edges_arr, hei
                 current_unvisited_cell = cell1
             elif cell2 not in visited_cells:
                 current_unvisited_cell = cell2
-        print(cell1, cell2, current_unvisited_cell, edge_direction, wall)
 
         if current_unvisited_cell != ():  # make wall a passage
-            maze_walls_temp = find_walls_from_cell(current_unvisited_cell, [])
+            delete_maze_walls.append(wall)
+            maze_walls_temp = find_walls_from_cell(current_unvisited_cell, wall)
+            maze_wall_temp_points = []
+            for i in maze_walls_temp:
+                maze_wall_temp_points.append((points_arr[i[0]], points_arr[i[1]]))
+            print("cell1 = " + str(cell1), "cell2 = " + str(cell2), "current cell = " + str(current_unvisited_cell), "wall = " + str(wall), "edge direction = " + str(edge_direction), "point1 of wall = " + str(points_arr[wall[0]]), "point2 of wall = " + str(points_arr[wall[1]]), "walls around cell = " + str(maze_wall_temp_points))
+
             for i in maze_walls_temp:
                 if i not in maze_walls:
                     maze_walls.append(i)  # add cell's edges to wall list
             visited_cells.append(current_unvisited_cell)  # cell is now visited
-            delete_maze_walls.append(wall)
-
-        update_unvisited_cells()
+            update_unvisited_cells()
 
         maze_walls.remove(wall)
 
@@ -406,16 +412,18 @@ def show_edges(graph, edges, points):
 
 
 def state_position(points, graph, axis):
+    color_list = ['red', 'blue', 'green', 'yellow', 'purple']
     positions = {point: point for point in points}
     edges = G.edges()
-    colors = [G[u][v]['color'] for u, v in edges]
+    nodes = G.nodes()
 
-    nx.draw(graph, pos=positions, node_size=10, edge_color=colors, node_color='black', ax=axis)
+    edge_colors = [G[u][v]['color'] for u, v in edges]
+    nx.draw(graph, pos=positions, node_size=0, edge_color=edge_colors, node_color='black', ax=axis)
 
 
-create_maze_grid(maze_points, maze_edges, 22, 22, 0, 0)
-create_maze_grid(ai_maze_points, ai_maze_edges, 21, 21, 0.5, 0.5)
-deleted_edges = generate_maze(G, maze_points, maze_edges, ai_maze_points, ai_maze_edges, 22, 22, 0.5, 0.5)
+create_maze_grid(maze_points, maze_edges, 20, 20, 0, 0)
+create_maze_grid(ai_maze_points, ai_maze_edges, 19, 19, 0.5, 0.5)
+deleted_edges = generate_maze(G, maze_points, maze_edges, ai_maze_points, ai_maze_edges, 20, 20, 0.5, 0.5)
 temp_maze_edges = maze_edges
 maze_edges = [i for i in temp_maze_edges if i not in deleted_edges]
 show_edges(G, ai_maze_edges, ai_maze_points)

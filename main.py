@@ -401,12 +401,58 @@ def generate_maze(graph, points_arr, edges_arr, ai_points_arr, ai_edges_arr, hei
     return delete_maze_walls
 
 
+def remove_blocked_ai_edges(maze_edges, maze_points, ai_edges, ai_points, width_offset, height_offset):
+    remove_ai_edges = []
+
+    for ai_point in ai_points:
+        if (ai_point[0] + 1, ai_point[1]) in ai_points: # check if right cell exists
+            if (ai_point[0] + width_offset, ai_point[1] + height_offset) in maze_points and (ai_point[0] + width_offset, ai_point[1] - height_offset) in maze_points: # check if maze points exist
+                if (maze_points.index((ai_point[0] + width_offset, ai_point[1] + height_offset)), maze_points.index((ai_point[0] + width_offset, ai_point[1] - height_offset)), 1) in maze_edges or (maze_points.index((ai_point[0] + width_offset, ai_point[1] - height_offset)), maze_points.index((ai_point[0] + width_offset, ai_point[1] + height_offset)), 1) in maze_edges: # check if vertical maze edge is in the way
+                    # check if ai edge exists and append accordingly
+                    if (ai_points.index(ai_point), ai_points.index((ai_point[0] + 1, ai_point[1])), 1) in ai_edges:
+                        remove_ai_edges.append((ai_points.index(ai_point), ai_points.index((ai_point[0] + 1, ai_point[1])), 1))
+                    elif (ai_points.index((ai_point[0] + 1, ai_point[1])), ai_points.index(ai_point), 1) in ai_edges:
+                        remove_ai_edges.append((ai_points.index((ai_point[0] + 1, ai_point[1])), ai_points.index(ai_point), 1))
+
+        if (ai_point[0] - 1, ai_point[1]) in ai_points:  # check if left cell exists
+            if (ai_point[0] - width_offset, ai_point[1] + height_offset) in maze_points and (ai_point[0] - width_offset, ai_point[1] - height_offset) in maze_points: # check if maze points exist
+                if (maze_points.index((ai_point[0] - width_offset, ai_point[1] + height_offset)), maze_points.index((ai_point[0] - width_offset, ai_point[1] - height_offset)), 1) in maze_edges or (maze_points.index((ai_point[0] - width_offset, ai_point[1] - height_offset)), maze_points.index((ai_point[0] - width_offset, ai_point[1] + height_offset)), 1) in maze_edges: # check if vertical maze edge is in the way
+                    # check if ai edge exists and append accordingly
+                    if (ai_points.index((ai_point), ai_points.index((ai_point[0] - 1, ai_point[1]))), 1) in ai_edges:
+                        remove_ai_edges.append((ai_points.index(ai_point), ai_points.index((ai_point[0] - 1, ai_point[1])), 1))
+                    elif (ai_points.index((ai_point[0] - 1, ai_point[1])), ai_points.index(ai_point), 1) in ai_edges:
+                        remove_ai_edges.append((ai_points.index((ai_point[0] - 1, ai_point[1])), ai_points.index(ai_point), 1))
+
+
+        if (ai_point[0], ai_point[1] + 1) in ai_points:  # check if top cell exists
+            if (ai_point[0] + width_offset, ai_point[1] + height_offset) in maze_points and (ai_point[0] - width_offset, ai_point[1] + height_offset) in maze_points: # check if maze points exist
+                if (maze_points.index((ai_point[0] + width_offset, ai_point[1] + height_offset)), maze_points.index((ai_point[0] - width_offset, ai_point[1] + height_offset)), 1) in maze_edges or (maze_points.index((ai_point[0] - width_offset, ai_point[1] + height_offset)), maze_points.index((ai_point[0] + width_offset, ai_point[1] + height_offset)), 1) in maze_edges: # check if vertical maze edge is in the way
+                    # check if ai edge exists and append accordingly
+                    if (ai_points.index(ai_point), ai_points.index((ai_point[0], ai_point[1] + 1)), 1) in ai_edges:
+                        remove_ai_edges.append((ai_points.index(ai_point), ai_points.index((ai_point[0], ai_point[1] + 1)), 1))
+                    elif (ai_points.index((ai_point[0], ai_point[1] + 1)), ai_points.index(ai_point), 1) in ai_edges:
+                        remove_ai_edges.append((ai_points.index((ai_point[0], ai_point[1] + 1)), ai_points.index(ai_point), 1))
+
+
+        if (ai_point[0], ai_point[1] - 1) in ai_points:  # check if bottom cell exists
+            if (ai_point[0] + width_offset, ai_point[1] - height_offset) in maze_points and (ai_point[0] - width_offset, ai_point[1] - height_offset) in maze_points: # check if maze points exist
+                if (maze_points.index((ai_point[0] - width_offset, ai_point[1] - height_offset)), maze_points.index((ai_point[0] + width_offset, ai_point[1] - height_offset)), 1) in maze_edges or (maze_points.index((ai_point[0] + width_offset, ai_point[1] - height_offset)), maze_points.index((ai_point[0] - width_offset, ai_point[1] - height_offset)), 1) in maze_edges: # check if vertical maze edge is in the way
+                    # check if ai edge exists and append accordingly
+                    if (ai_points.index(ai_point), ai_points.index((ai_point[0], ai_point[1] - 1), 1)) in ai_edges:
+                        remove_ai_edges.append((ai_points.index(ai_point), ai_points.index((ai_point[0], ai_point[1] - 1)), 1))
+                    elif (ai_points.index((ai_point[0], ai_point[1] - 1)), ai_points.index(ai_point), 1) in ai_edges:
+                        remove_ai_edges.append((ai_points.index((ai_point[0], ai_point[1] - 1)), ai_points.index(ai_point), 1))
+
+    print(remove_ai_edges)
+    return remove_ai_edges
+
+
 
 def show_edges(graph, edges, points):
     for i in range(len(edges)):
         if 0 <= edges[i][0] < len(points) and 0 <= edges[i][1] < len(points):
             if isinstance(points[edges[i][0]][0], float):
-                add_edge_to_graph(graph, points[edges[i][0]], points[edges[i][1]], 'white', edges[i][2])
+                add_edge_to_graph(graph, points[edges[i][0]], points[edges[i][1]], 'lightblue', edges[i][2])
             else:
                 add_edge_to_graph(graph, points[edges[i][0]], points[edges[i][1]], 'black', edges[i][2])
 
@@ -426,6 +472,9 @@ create_maze_grid(ai_maze_points, ai_maze_edges, 19, 19, 0.5, 0.5)
 deleted_edges = generate_maze(G, maze_points, maze_edges, ai_maze_points, ai_maze_edges, 20, 20, 0.5, 0.5)
 temp_maze_edges = maze_edges
 maze_edges = [i for i in temp_maze_edges if i not in deleted_edges]
+ai_deleted_edges = remove_blocked_ai_edges(maze_edges, maze_points, ai_maze_edges, ai_maze_points, 0.5, 0.5)
+temp_ai_maze_edges = ai_maze_edges
+ai_maze_edges = [i for i in temp_ai_maze_edges if i not in ai_deleted_edges]
 show_edges(G, ai_maze_edges, ai_maze_points)
 show_edges(G, maze_edges, maze_points)
 state_position(maze_points + ai_maze_points, G, ax)

@@ -16,6 +16,11 @@ nx.draw(G, pos=pos,
         with_labels=False,
         node_size=1)
 plt.show()'''
+#settings-ish
+width = 20
+height = 20
+width_offset = 0.5 #pls dont change
+height_offset = 0.5 # pls dont change
 
 # main maze points
 maze_points = []  # (x,y) points
@@ -138,8 +143,7 @@ def generate_maze(graph, points_arr, edges_arr, ai_points_arr, ai_edges_arr, hei
     ai_end_choice = (end_choice[0] + width_offset, end_choice[1] + height_offset)
 
     # creates start and end walls
-    '''edges_arr.remove((points_arr.index(end_choice), points_arr.index(end_choice) + 1, 1))
-    edges_arr.remove((points_arr.index(start_choice), points_arr.index(start_choice) + 1, 1))
+    '''
 
     # create paths
     path = []'''
@@ -384,7 +388,7 @@ def generate_maze(graph, points_arr, edges_arr, ai_points_arr, ai_edges_arr, hei
             maze_wall_temp_points = []
             for i in maze_walls_temp:
                 maze_wall_temp_points.append((points_arr[i[0]], points_arr[i[1]]))
-            print("cell1 = " + str(cell1), "cell2 = " + str(cell2), "current cell = " + str(current_unvisited_cell), "wall = " + str(wall), "edge direction = " + str(edge_direction), "point1 of wall = " + str(points_arr[wall[0]]), "point2 of wall = " + str(points_arr[wall[1]]), "walls around cell = " + str(maze_wall_temp_points))
+            #print("cell1 = " + str(cell1), "cell2 = " + str(cell2), "current cell = " + str(current_unvisited_cell), "wall = " + str(wall), "edge direction = " + str(edge_direction), "point1 of wall = " + str(points_arr[wall[0]]), "point2 of wall = " + str(points_arr[wall[1]]), "walls around cell = " + str(maze_wall_temp_points))
 
             for i in maze_walls_temp:
                 if i not in maze_walls:
@@ -398,6 +402,8 @@ def generate_maze(graph, points_arr, edges_arr, ai_points_arr, ai_edges_arr, hei
     print("visited_cells = " + str(visited_cells))
     print("unvisited_cells = " + str(unvisited_cells))
     print("delete_maze_walls = " + str(delete_maze_walls))
+    edges_arr.remove((points_arr.index(end_choice), points_arr.index(end_choice) + 1, 1))
+    edges_arr.remove((points_arr.index(start_choice), points_arr.index(start_choice) + 1, 1))
     return delete_maze_walls
 
 
@@ -438,23 +444,33 @@ def remove_blocked_ai_edges(maze_edges, maze_points, ai_edges, ai_points, width_
             if (ai_point[0] + width_offset, ai_point[1] - height_offset) in maze_points and (ai_point[0] - width_offset, ai_point[1] - height_offset) in maze_points: # check if maze points exist
                 if (maze_points.index((ai_point[0] - width_offset, ai_point[1] - height_offset)), maze_points.index((ai_point[0] + width_offset, ai_point[1] - height_offset)), 1) in maze_edges or (maze_points.index((ai_point[0] + width_offset, ai_point[1] - height_offset)), maze_points.index((ai_point[0] - width_offset, ai_point[1] - height_offset)), 1) in maze_edges: # check if vertical maze edge is in the way
                     # check if ai edge exists and append accordingly
-                    if (ai_points.index(ai_point), ai_points.index((ai_point[0], ai_point[1] - 1), 1)) in ai_edges:
+                    if (ai_points.index(ai_point), ai_points.index((ai_point[0], ai_point[1] - 1)), 1) in ai_edges:
                         remove_ai_edges.append((ai_points.index(ai_point), ai_points.index((ai_point[0], ai_point[1] - 1)), 1))
                     elif (ai_points.index((ai_point[0], ai_point[1] - 1)), ai_points.index(ai_point), 1) in ai_edges:
                         remove_ai_edges.append((ai_points.index((ai_point[0], ai_point[1] - 1)), ai_points.index(ai_point), 1))
 
-    print(remove_ai_edges)
     return remove_ai_edges
 
 
+def show_edges(graph, edges, points, ai_points, path):
+    new_path = []
 
-def show_edges(graph, edges, points):
+    for i in range(len(path) - 1):
+        if (ai_points.index(path[i]), ai_points.index(path[i + 1]), 1) in edges:
+            new_path.append((ai_points.index(path[i]), ai_points.index(path[i + 1]), 1))
+        elif (ai_points.index(path[i + 1]), ai_points.index(path[i]), 1) in edges:
+            new_path.append((ai_points.index(path[i + 1]), ai_points.index(path[i]), 1))
+    print("path = " + str(new_path))
+
     for i in range(len(edges)):
         if 0 <= edges[i][0] < len(points) and 0 <= edges[i][1] < len(points):
-            if isinstance(points[edges[i][0]][0], float):
+            if edges[i] in new_path:
+                add_edge_to_graph(graph, points[edges[i][0]], points[edges[i][1]], 'blue', edges[i][2])
+            elif isinstance(points[edges[i][0]][0], float):
                 add_edge_to_graph(graph, points[edges[i][0]], points[edges[i][1]], 'lightblue', edges[i][2])
             else:
                 add_edge_to_graph(graph, points[edges[i][0]], points[edges[i][1]], 'black', edges[i][2])
+
 
 
 def state_position(points, graph, axis):
@@ -467,26 +483,35 @@ def state_position(points, graph, axis):
     nx.draw(graph, pos=positions, node_size=0, edge_color=edge_colors, node_color='black', ax=axis)
 
 
-create_maze_grid(maze_points, maze_edges, 20, 20, 0, 0)
-create_maze_grid(ai_maze_points, ai_maze_edges, 19, 19, 0.5, 0.5)
-deleted_edges = generate_maze(G, maze_points, maze_edges, ai_maze_points, ai_maze_edges, 20, 20, 0.5, 0.5)
+create_maze_grid(maze_points, maze_edges, width, height, 0, 0)
+create_maze_grid(ai_maze_points, ai_maze_edges, width - 1, height - 1, height_offset, width_offset)
+deleted_edges = generate_maze(G, maze_points, maze_edges, ai_maze_points, ai_maze_edges, width, height, height_offset, width_offset)
 temp_maze_edges = maze_edges
 maze_edges = [i for i in temp_maze_edges if i not in deleted_edges]
 ai_deleted_edges = remove_blocked_ai_edges(maze_edges, maze_points, ai_maze_edges, ai_maze_points, 0.5, 0.5)
 temp_ai_maze_edges = ai_maze_edges
 ai_maze_edges = [i for i in temp_ai_maze_edges if i not in ai_deleted_edges]
-show_edges(G, ai_maze_edges, ai_maze_points)
-show_edges(G, maze_edges, maze_points)
+show_edges(G, ai_maze_edges, ai_maze_points, ai_maze_points, [])
+shortest_path = nx.shortest_path(G, ai_start_choice, (ai_end_choice[0], ai_end_choice[1] - 1))
+print(shortest_path)
+G.remove_edges_from(ai_maze_edges)
+G.remove_nodes_from(ai_maze_points)
+print(G.nodes, G.edges)
+show_edges(G, ai_maze_edges, ai_maze_points, ai_maze_points, shortest_path)
+show_edges(G, maze_edges, maze_points, ai_maze_points, [])
 state_position(maze_points + ai_maze_points, G, ax)
 print("maze points" + str(maze_points))
 print("ai maze points" + str(ai_maze_points))
 print("maze edges" + str(maze_edges))
 print("ai maze edges" + str(ai_maze_edges))
 
+
 # state_position(ai_maze_points, G, ax)
 
 '''nx.draw_networkx_labels(G, pos=pos)
 nx.draw_networkx_edge_labels(G, pos, edge_labels=labels, ax=ax)'''  # coord and weight labels
+
 plt.axis("on")
 ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
 plt.show()
+
